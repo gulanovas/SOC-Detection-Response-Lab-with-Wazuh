@@ -1,37 +1,89 @@
 ## Session 3: Mapping Detections to MITRE ATT&CK
 
-The goal of this session was to stop viewing the attack as a raw pile of failed logins and start viewing it the way a SOC analyst does: as an adversary operating in a specific phase of an intrusion. Wazuh performs this mapping automatically, tagging each detection with its MITRE ATT&CK technique and tactic.
+The goal of this session was to stop looking at the attack as only a large number of failed login events and start viewing it from a SOC analyst perspective.
 
-### What the module shows
+Instead of treating the alerts as separate log entries, I used the Wazuh **MITRE ATT&CK** module to understand what kind of attacker behavior was happening. Wazuh automatically maps detections to MITRE ATT&CK tactics and techniques, which helps connect raw events to a real attack phase.
 
-Opening the Wazuh **MITRE ATT&CK** module and filtering to the attack window, the brute-force activity from Session 1 appears mapped onto the framework under:
+## What the MITRE ATT&CK Module Shows
+
+After opening the Wazuh **MITRE ATT&CK** dashboard and filtering the attack window, the brute-force activity from Session 1 was mapped under:
 
 - **Tactic:** Credential Access
-- **Technique:** T1110 (Brute Force)
+- **Technique:** T1110 - Brute Force
 
-Clicking the technique reveals every alert feeding it. All of the Session 1 detections (rules 5760, 5710, 5763, 40111, and the corroborating PAM/syslog rules) roll up under this single technique, because they are all evidence of the same adversary behavior: attempting to obtain valid credentials by guessing them.
+This means the failed login activity was not only normal authentication noise. It represented an attacker trying to gain valid credentials.
 
-### The reframe: from events to attacker behavior
+By clicking the technique, I was able to see the alerts connected to it. The detections from Session 1, including rules **5760**, **5710**, **5763**, **40111**, and related PAM/syslog alerts, were all grouped under the same technique.
 
-This is the core lesson of the session. The same data can be read two completely different ways:
+This showed that different alerts were actually describing the same attacker behavior: repeated attempts to guess or obtain valid login credentials.
 
-- **Log-watcher view:** "There are roughly 1,467 authentication-failure events on this host."
-- **Analyst view:** "An adversary is in the Credential Access phase, attempting T1110 (Brute Force) against `victim-ubuntu` (192.168.56.103) from `192.168.56.101`."
+## Evidence Screenshot
 
-The second framing is what matters operationally. It describes *what the attacker is trying to achieve* and *where they are in their operation*, rather than just counting noise. An analyst reports "we have credential-access activity against a host," not "there are a lot of failed logins." That shift, from events to intent, is the difference between watching logs and doing analysis.
+The screenshot below shows the Wazuh MITRE ATT&CK dashboard filtered by Credential Access and Brute Force activity.
 
-### Why ATT&CK mapping matters
+![MITRE ATT&CK dashboard filtered by Credential Access and Brute Force activity](screenshots/03-mitre-matrix.png)
 
-- It gives every detection a shared, standard vocabulary that analysts, tools, and reports all understand (T1110 means the same thing everywhere).
-- It places an isolated alert into the context of an attack lifecycle, so you can reason about what the adversary is likely to do next (Credential Access typically precedes Lateral Movement, Persistence, or Privilege Escalation, which is exactly what Session 2's backdoor account represented).
-- It lets a defender measure coverage: which tactics and techniques the environment can currently detect, and where the blind spots are.
+**Screenshot file:** `screenshots/03-mitre-matrix.png`
 
-### Key takeaway
+## From Events to Attacker Behavior
 
-Mapping detections to MITRE ATT&CK turns a stream of low-level events into a description of adversary behavior within a recognised attack framework. The Session 1 brute force is not just "failed logins"; it is the Credential Access phase of a potential intrusion, and framing it that way is what allows an analyst to prioritise, communicate, and anticipate the attacker's next move.
+This was the main lesson of the session.
 
-![MITRE ATT&CK dashboard filtered by Credential Access and Brute Force (T1110), showing the Session 1 detections mapped to the technique](screenshots/03-mitre-matrix.png)
+The same data can be understood in two different ways.
 
-*Wazuh MITRE ATT&CK module showing the brute-force detections mapped to T1110 (Credential Access).*
+### Log-watcher view
 
-**Tactic:** Credential Access · **Technique:** T1110 (Brute Force)
+> There are many failed authentication events on this host.
+
+### Analyst view
+
+> An adversary is in the Credential Access phase and is attempting T1110 - Brute Force against `victim-ubuntu` (`192.168.56.103`) from `192.168.56.101`.
+
+The second view is much more useful for security analysis because it explains what the attacker is trying to achieve.
+
+Instead of only counting failed logins, the analyst identifies the attacker’s objective. In this case, the objective was to gain valid credentials and access the victim machine.
+
+This is the difference between simply watching logs and doing real analysis.
+
+## Why MITRE ATT&CK Mapping Matters
+
+MITRE ATT&CK mapping is useful because it gives alerts more context.
+
+It helps analysts describe activity using a shared security language. For example, **T1110 - Brute Force** means the same thing across different tools, reports, and teams.
+
+It also helps place alerts inside the attack lifecycle. Credential Access usually happens before actions like:
+
+- Lateral Movement
+- Persistence
+- Privilege Escalation
+
+This connects directly with Session 2, where the attacker created a backdoor account for persistence after gaining access.
+
+MITRE ATT&CK also helps defenders understand which techniques are visible in their environment and which areas may still have detection gaps.
+
+## Analyst Interpretation
+
+Instead of reporting:
+
+> There are many failed logins.
+
+A better analyst report would be:
+
+> Wazuh detected Credential Access activity mapped to MITRE ATT&CK T1110 - Brute Force. The attacker attempted repeated authentication against `victim-ubuntu` from `192.168.56.101`, indicating an attempt to obtain valid credentials.
+
+## Key Takeaway
+
+Mapping detections to MITRE ATT&CK turns raw log events into a clear description of attacker behavior.
+
+The brute-force activity from Session 1 was not just a collection of failed logins. It represented the **Credential Access** phase of a possible intrusion.
+
+This framing is important because it helps an analyst understand the attacker’s intent, communicate the risk clearly, and anticipate what the attacker may try next.
+
+## Evidence
+
+**Screenshot:** `screenshots/03-mitre-matrix.png`
+
+**Tactic:** Credential Access  
+**Technique:** T1110 - Brute Force  
+**Target:** `victim-ubuntu` / `192.168.56.103`  
+**Source:** `192.168.56.101`
