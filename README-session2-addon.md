@@ -79,7 +79,7 @@ So blocking the IP only treats the symptom, while layered controls and an IPS tr
 
 The idea was that a new user would go unnoticed if they only paid attention to the root account. In practice, creating a user is one of the loudest things you can do on a monitored host. It changes `/etc/passwd`, `/etc/shadow`, and `/etc/group`, all of which FIM is watching, and it also generates its own "new user added" log event. The persistence attempt was fully caught and attributed before the backdoor was ever used.
 
-![Wazuh FIM alerts showing rules 550, 554, and 5902 firing after the rogue backdoor account was created on victim-ubuntu](screenshots/02-fim-persistence.png)
+![Wazuh FIM alerts showing rules 550, 554, and 5902 firing after the rogue backdoor account was created on victim-ubuntu](screenshots/02-fim-change.png)
 
 *File integrity alerts (rules 550, 554, 5902) triggered by creating and privileging the backdoor account.*
 
