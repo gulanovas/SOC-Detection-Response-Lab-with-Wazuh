@@ -1,6 +1,6 @@
 # Investigation: Why Rule 5720 Never Appeared During a Brute-Force Attack
 
-During the brute-force attack, my goal was to trigger rule ID **5720 — "sshd: Multiple authentication failures"** (MITRE T1110, Brute Force).
+During the brute-force attack, my goal was to trigger rule ID **5720 "sshd: Multiple authentication failures"** (MITRE T1110, Brute Force).
 
 After a few attempts I still couldn't see this rule appear in my Wazuh dashboard, which gave me the idea to check what the actual *requirements* for that rule are. It might sound funny, but I genuinely wanted to see this specific rule fire in my logs — so I ran:
 
@@ -44,9 +44,9 @@ sudo journalctl -u ssh --no-pager | tail -20
 Jul 08 15:46:11 ubuntu sshd-session[7971]: Failed password for root from 192.168.56.101 port 59562 ssh2
 ```
 
-Hmm — "Failed password" is there, but **not at the beginning of the line**. The line starts with the timestamp of when the event occurred, then the hostname. What's interesting is that the process (PID owner) is `sshd-session`, whereas on older Ubuntu systems it's just `sshd` — which tells me this Ubuntu is fairly new. After that comes the message. Let me google how older Ubuntu sshd logs used to look, to prove my point that rule 5716 never fired because the log format never matched its regex.
+Hmm — "Failed password" is there, but **not at the beginning of the line**. The line starts with the timestamp of when the event occurred, then the hostname. What's interesting is that the process (PID owner) is `sshd-session`, whereas on older Ubuntu systems it's just `sshd` which tells me this Ubuntu is fairly new. After that comes the message. Let me google how older Ubuntu sshd logs used to look, to prove my point that rule 5716 never fired because the log format never matched its regex.
 
-According to what I found, the old sshd log looks identical — just `sshd` instead of `sshd-session`:
+According to what I found, the old sshd log looks identical just `sshd` instead of `sshd-session`:
 
 ```
 Jul 08 15:46:11 ubuntu sshd[7971]: Failed password for root from 192.168.56.101 port 59562 ssh2
@@ -60,19 +60,19 @@ sudo /var/ossec/bin/wazuh-logtest
 
 **Legacy format (`sshd`):**
 ```
-Phase 1 — program_name: 'sshd'
-Phase 2 — name: 'sshd'   parent: 'sshd'   dstuser: 'root'   srcip: '192.168.56.101'
-Phase 3 — id: '5760'   level: '5'   sshd: authentication failed.
+Phase 1 - program_name: 'sshd'
+Phase 2 - name: 'sshd'   parent: 'sshd'   dstuser: 'root'   srcip: '192.168.56.101'
+Phase 3 - id: '5760'   level: '5'   sshd: authentication failed.
 ```
 
 **Modern format (`sshd-session`):**
 ```
-Phase 1 — program_name: 'sshd-session'
-Phase 2 — name: 'sshd'   parent: 'sshd'   dstuser: 'root'   srcip: '192.168.56.101'
-Phase 3 — id: '5760'   level: '5'   sshd: authentication failed.
+Phase 1 - program_name: 'sshd-session'
+Phase 2 - name: 'sshd'   parent: 'sshd'   dstuser: 'root'   srcip: '192.168.56.101'
+Phase 3 - id: '5760'   level: '5'   sshd: authentication failed.
 ```
 
-Both formats decode **identically** and both fire rule **5760**. So my theory was wrong — it's not that `sshd-session` breaks the decoder. Okay, so what's really the problem? Let me run a deeper `wazuh-logtest`:
+Both formats decode **identically** and both fire rule **5760**. So my theory was wrong it's not that `sshd-session` breaks the decoder. Okay, so what's really the problem? Let me run a deeper `wazuh-logtest`:
 
 ```
 /var/ossec/bin/wazuh-logtest -v
@@ -91,7 +91,7 @@ Trying rule: 99904 - sshd: Authentication failed from a malicious IP address $(s
 Trying rule: 5760 - sshd: authentication failed.
 ```
 
-So my theory that either the regex, the decoding, or rule 5716 simply not firing was the cause is **false** — the tree clearly shows `*Rule 5716 matched`, and 5720 is evaluated right after it. So then let me check it differently: what if I feed rule 5716 eight times into `wazuh-logtest` — will rule 5720 appear? Let me try.
+So my theory that either the regex, the decoding, or rule 5716 simply not firing was the cause is **false** the tree clearly shows `*Rule 5716 matched`, and 5720 is evaluated right after it. So then let me check it differently: what if I feed rule 5716 eight times into `wazuh-logtest` will rule 5720 appear? Let me try.
 
 After several identical failure lines, the frequency counter climbed (`firedtimes: '7'` on 5760), and then:
 
@@ -114,5 +114,5 @@ That said, this investigation let me understand a root cause I couldn't fully pr
 - Reading and interpreting Wazuh rule definitions (`if_sid`, `if_matched_sid`, `frequency`, `same_source_ip`, `match` regex, rule chaining).
 - Using `wazuh-logtest`, including verbose rule-tree mode, to inspect decoding and rule matching.
 - Forming a hypothesis (log-format mismatch), testing it, and **discarding it** when the evidence disagreed.
-- Distinguishing "detection missing" from "detection reported under a different rule ID" — avoiding a false-negative conclusion.
+- Distinguishing "detection missing" from "detection reported under a different rule ID" avoiding a false-negative conclusion.
 - Honest reporting: separating what was proven from what remains a likely-but-unconfirmed root cause.
