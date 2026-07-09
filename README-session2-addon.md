@@ -42,21 +42,21 @@ Within seconds, new alerts appeared in Wazuh. Not only was the root login visibl
 
 So from the defender's side, the full picture was reconstructed from the alerts alone: *an attacker logged in as root, created a new user, gave that user a login shell, and escalated it into the sudo group.* The one thing not yet seen was any login **from** the new account — persistence had been planted but not yet used.
 
-### Response
+### Response — the defender's options
 
-The rogue account was removed:
+Once the intrusion is detected, the analyst has to decide how to respond. First, the rogue account was removed:
 ```
 sudo userdel -r backdoor
 ```
 (`-r` also deletes the home directory.)
 
-> *Attacker's afterthought:* "Should we firewall them out to keep control?"
+> *Defender's reasoning:* "Should we block the attacker's IP at the firewall to cut them off completely?"
 > ```
-> sudo ufw deny from 203.0.113.50 to any port 22
+> sudo ufw deny from 192.168.56.101 to any port 22
 > ```
-> "…no, we'll just change the password, that's fine for now."
+> "…rotating the compromised credentials handles it for now — but firewalling the source (`192.168.56.101`, the attacker's host) is the stronger containment step if the activity continues."
 
-This captures the attacker's decision-making — and from the blue-team side, each of those actions (a new firewall rule, a password change) would *also* generate detectable events, reinforcing that every move to maintain control leaves a trace.
+This is the containment decision a SOC analyst faces after confirming an intrusion: remove the persistence, rotate the compromised credentials, and — if the activity persists — block the attacking source IP (`192.168.56.101`) at the firewall to sever access entirely. Each of these response actions is a deliberate defensive step, not part of the attack.
 
 ### Key takeaway
 
