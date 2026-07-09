@@ -12,7 +12,7 @@ This helped me understand that the activity should not be viewed only as separat
 
 The screenshot below shows the MITRE ATT&CK dashboard in Wazuh after filtering the alerts by tactic and technique.
 
-![MITRE ATT&CK Dashboard filtered by Credential Access and Password Guessing](03-mitre-matrix.png)
+![MITRE ATT&CK Dashboard filtered by Credential Access and Password Guessing](screenshots/03-mitre-matrix.png)
 
 **Screenshot file:** `screenshots/03-mitre-matrix.png`
 
