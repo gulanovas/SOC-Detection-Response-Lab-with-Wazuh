@@ -81,6 +81,6 @@ In short: blocking the IP treats the symptom, while layered controls and an IPS 
 
 The attacker assumed a newly created user would go unnoticed if attention stayed on the root account. In reality, account creation is one of the loudest things you can do on a monitored host. It modifies `/etc/passwd`, `/etc/shadow`, and `/etc/group`, all of which FIM watches, and it generates an independent "new user added" log event. The persistence attempt was fully detected and attributed before the backdoor was ever used.
 
-*Evidence:* `screenshots/02-fim-persistence.png`
+*Evidence:* `screenshots/02-fim-change.png`
 
 **Detections:** rules 550, 554, 5902 · MITRE ATT&CK T1136 (Create Account)
